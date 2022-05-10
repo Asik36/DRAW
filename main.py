@@ -6,7 +6,8 @@ clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screenWidth, screenHeight))
 
 drawing = False
-temp = None
+last_pos = None
+now_pos = None
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -19,11 +20,13 @@ while True:
 
     if drawing:
         pygame.draw.circle(screen, (255, 0, 0), pygame.mouse.get_pos(), 15)
-        if pygame.mouse.get_pos() != temp:
-            incline = pygame.mouse.get_pos()[1] - temp[1]/pygame.mouse.get_pos()[0] - temp[0]
+        if pygame.mouse.get_pos() != last_pos:
+            incline = pygame.mouse.get_pos()[1] - last_pos[1] / pygame.mouse.get_pos()[0] - last_pos[0]
 
-            for i in range(max(pygame.mouse.get_pos()[0], temp[0]),min(pygame.mouse.get_pos()[0], temp[0])):
-                print("f")
+            for i in range(min(pygame.mouse.get_pos()[0], last_pos[0]), max(pygame.mouse.get_pos()[0], last_pos[0])):
+                print(i)
+                pygame.draw.circle(screen, (255, 0, 0), (pygame.mouse.get_pos()[0]+i, pygame.mouse.get_pos()[1]+incline, 15))
+
     pygame.display.flip()
     clock.tick(60)
-    temp = pygame.mouse.get_pos()
+    last_pos = pygame.mouse.get_pos()
