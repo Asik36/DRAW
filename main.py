@@ -4,19 +4,7 @@ import draw
 from player import *
 
 
-def out_of_bounds():
-    if player.rect.right >= screenWidth:
-        player.right_pressed = False
-        player.x = screenWidth - player.size_x
-    if player.rect.left <= 0:
-        player.left_pressed = False
-        player.x = 0
-    if player.rect.top <= 0:
-        player.up_pressed = False
-        player.y = 0
-    if player.rect.bottom >= screenHeight:
-        player.down_pressed = False
-        player.y = screenHeight - player.size_y
+
 
 
 if __name__ == "__main__":
@@ -26,15 +14,24 @@ if __name__ == "__main__":
     pygame.font.init()
     clock = pygame.time.Clock()
 
-     # Window settings
+    # Window settings
     (screenWidth, screenHeight) = (1500, 900)
     screen = pygame.display.set_mode((screenWidth, screenHeight))
-    game_surf = pygame.Surface([screenWidth, screenHeight], pygame.SRCALPHA, 32)
-    game_surf = game_surf.convert_alpha()
+    dr = draw.DrawSurf(screenWidth, screenHeight)
+    draw_screen = pygame.sprite.GroupSingle(dr)
 
-    player = Player(300, 300, 100, 100)
-    player_group = pygame.sprite.GroupSingle(player)
+
+
+    # player
+    p = Player(300, 300, 100, 100)
+    player_group = pygame.sprite.GroupSingle(p)
+
+    eye = Eye(p)
+    eye_group = pygame.sprite.GroupSingle(eye)
+
     drawing_bool = False
+
+    collition_left = False
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -44,37 +41,52 @@ if __name__ == "__main__":
                 drawing_bool = True
             if event.type == pygame.MOUSEBUTTONUP:
                 drawing_bool = False
-                draw.reset()
+                draw_screen.sprite.reset()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    player.left_pressed = True
+                    player_group.sprite.left_pressed = True
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    player.right_pressed = True
+                    player_group.sprite.right_pressed = True
                 if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    player.up_pressed = True
+                    player_group.sprite.up_pressed = True
                 if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    player.down_pressed = True
+                    player_group.sprite.down_pressed = True
                 if event.key == pygame.K_LSHIFT:
-                    player.speed = 100
+                    p.fast()
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    player.left_pressed = False
+                    player_group.sprite.left_pressed = False
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    player.right_pressed = False
+                    player_group.sprite.right_pressed = False
                 if event.key == pygame.K_UP or event.key == pygame.K_w:
-                    player.up_pressed = False
+                    player_group.sprite.up_pressed = False
                 if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    player.down_pressed = False
+                    player_group.sprite.down_pressed = False
                 if event.key == pygame.K_LSHIFT:
-                    player.speed = 6
-        out_of_bounds()
+                    p.slow()
+        player_group.sprite.out_of_bounds(screenWidth, screenHeight)
 
-        if drawing_bool:
-            draw.drawing(game_surf)
+        if drawing_bool and pygame.mouse.get_pos() != 3:
+            draw_screen.sprite.drawing()
+
+        # collide
+        if eye.collide(draw_screen) and (player_group.sprite.right_pressed or player_group.sprite.left_pressed):
+            p.stop()
+        elif not eye.collide(draw_screen):
+            p.go()
+
+        # update
         player_group.update()
-        player.draw(screen)
+        player_group.draw(screen)
+        if player_group.sprite.left_pressed or player_group.sprite.right_pressed or player_group.sprite.up_pressed or \
+                player_group.sprite.down_pressed:
+
+            eye_group.update()
+            eye_group.draw(screen)
+        # draw
         pygame.display.flip()
         screen.fill((12, 24, 36))
-        screen.blit(game_surf,  (0, 0))
+        screen.blit(draw_screen.sprite.image, (0, 0))
         clock.tick(60)
+        #print(int(clock.get_fps()))
 
